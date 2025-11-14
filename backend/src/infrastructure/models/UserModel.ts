@@ -20,7 +20,7 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
       unique: true,
-      lowercase: true, // ✅ Ensures case-insensitive email matching
+      lowercase: true, 
       trim: true,
     },
 
@@ -30,7 +30,7 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ["admin", "doctor", "patient"],
       required: true,
-      default: "patient", // ✅ Optional, avoids missing role errors
+      default: "patient", 
     },
 
     isVerified: {

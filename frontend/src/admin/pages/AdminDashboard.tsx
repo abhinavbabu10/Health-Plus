@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
-import Sidebar from "../pages/components/Sidebar";
-import Navbar from "../pages/components/Navbar";
-import StatsCard from "../pages/components/StatsCard";
+import AdminLayout from "../AdminLayout";
+import StatsCard from "../../admin/pages/components/StatsCard";
+import { getAdminDashboardSummary } from "../utils/api/adminApi";
 import { useAppSelector } from "../../app/hooks";
 import { selectAdminAuth } from "../features/adminAuthSlice";
-import { getAdminDashboardSummary } from "../utils/api/adminApi";
 
-const AdminDashboard: React.FC = () => {
+const Dashboard: React.FC = () => {
   const { adminToken } = useAppSelector(selectAdminAuth);
   const [summary, setSummary] = useState({ doctors: 0, patients: 0, appointments: 0 });
 
@@ -16,26 +15,22 @@ const AdminDashboard: React.FC = () => {
       try {
         const data = await getAdminDashboardSummary(adminToken);
         setSummary(data);
-      } catch (error) {
-        console.error("Error fetching dashboard summary:", error);
+      } catch (err) {
+        console.error(err);
       }
     };
     fetchSummary();
   }, [adminToken]);
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <div className="flex flex-col flex-1">
-        <Navbar title="Admin Dashboard" />
-        <main className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <StatsCard title="Doctors" value={summary.doctors} icon="users" />
-          <StatsCard title="Patients" value={summary.patients} icon="activity" />
-          <StatsCard title="Appointments" value={summary.appointments} icon="appointments" />
-        </main>
+    <AdminLayout title="Dashboard">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <StatsCard title="Doctors" value={summary.doctors} icon="users" />
+        <StatsCard title="Patients" value={summary.patients} icon="activity" />
+        <StatsCard title="Appointments" value={summary.appointments} icon="appointments" />
       </div>
-    </div>
+    </AdminLayout>
   );
 };
 
-export default AdminDashboard;
+export default Dashboard;

@@ -5,7 +5,8 @@ import dotenv from "dotenv";
 import { connectDB } from "./config/db";
 import { errorMiddleware } from "./presentation/middlewares/errorMiddleware";
 import { authRoutes } from "./presentation/routes/authRoutes";
-import { doctorRoutes } from "./presentation/routes/doctorRoutes";
+import { doctorAuthRoutes } from "./presentation/routes/doctorAuthRoutes";
+
 // import { appointmentRoutes } from "./presentation/routes/appointmentRoutes";
 import { prescriptionRoutes } from "./presentation/routes/prescriptionRoutes";
 import patientRoutes from "./presentation/routes/patientRoutes";
@@ -24,7 +25,7 @@ app.use(cors({
 
 
 app.use("/api/auth", authRoutes);
-app.use("/api/doctors", doctorRoutes);
+app.use("/api/doctor/auth", doctorAuthRoutes);
 // app.use("/api/appointments", appointmentRoutes);
 app.use("/api/prescriptions", prescriptionRoutes);
 app.use("/api/patients", patientRoutes);

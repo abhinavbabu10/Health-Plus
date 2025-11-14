@@ -4,7 +4,7 @@ import type { RootState } from "../../app/store";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-// 🧑‍💼 Admin model (must match backend response)
+
 interface AdminUser {
   id: string;
   name: string;
@@ -12,7 +12,6 @@ interface AdminUser {
   role: "admin";
 }
 
-// 🔐 Admin slice state
 interface AdminState {
   adminToken: string | null;
   adminUser: AdminUser | null;
@@ -20,7 +19,6 @@ interface AdminState {
   error: string | null;
 }
 
-// 🌟 Initial state (read from localStorage)
 const initialState: AdminState = {
   adminToken: localStorage.getItem("adminToken") || null,
   adminUser: localStorage.getItem("adminUser")
@@ -30,7 +28,7 @@ const initialState: AdminState = {
   error: null,
 };
 
-// ⚡ Admin login thunk
+
 export const adminLogin = createAsyncThunk<
   { token: string; user: AdminUser },
   { email: string; password: string },
@@ -41,12 +39,11 @@ export const adminLogin = createAsyncThunk<
       headers: { "Content-Type": "application/json" },
     });
 
-    // ✅ Expect correct backend shape
     if (!data.user || data.user.role !== "admin") {
       return rejectWithValue("Unauthorized access — Admins only");
     }
 
-    // ✅ Save in localStorage with admin-only keys
+
     localStorage.setItem("adminToken", data.token);
     localStorage.setItem("adminUser", JSON.stringify(data.user));
 
@@ -59,21 +56,32 @@ export const adminLogin = createAsyncThunk<
   }
 });
 
-// 🧩 Slice definition
 const adminAuthSlice = createSlice({
   name: "adminAuth",
   initialState,
   reducers: {
-    // ✅ Clear session completely
+  
+
     adminLogout: (state) => {
       state.adminToken = null;
       state.adminUser = null;
       localStorage.removeItem("adminToken");
       localStorage.removeItem("adminUser");
     },
-    // ✅ Clear error
+
+ 
     clearAdminError: (state) => {
       state.error = null;
+    },
+
+
+    loadAdminFromStorage: (state) => {
+      const token = localStorage.getItem("adminToken");
+      const user = localStorage.getItem("adminUser");
+      if (token && user) {
+        state.adminToken = token;
+        state.adminUser = JSON.parse(user);
+      }
     },
   },
   extraReducers: (builder) => {
@@ -97,11 +105,8 @@ const adminAuthSlice = createSlice({
   },
 });
 
-// 🔹 Selectors
+
+
 export const selectAdminAuth = (state: RootState) => state.adminAuth;
-
-// 🔹 Actions
-export const { adminLogout, clearAdminError } = adminAuthSlice.actions;
-
-// 🔹 Reducer
+export const { adminLogout, clearAdminError, loadAdminFromStorage } = adminAuthSlice.actions;
 export default adminAuthSlice.reducer;

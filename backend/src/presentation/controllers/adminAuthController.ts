@@ -19,7 +19,7 @@ export class AdminAuthController {
       return res.status(200).json({
         success: true,
         token,
-        user, // 👈 matches frontend
+        user, 
       });
     } catch (err: any) {
       return res.status(401).json({

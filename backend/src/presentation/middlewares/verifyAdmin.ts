@@ -11,7 +11,7 @@ export const verifyAdmin = (req: Request, res: Response, next: NextFunction) => 
     if (decoded.role !== "admin") {
       return res.status(403).json({ message: "Access denied. Admins only." });
     }
-    (req as any).admin = decoded; // store for reference
+    (req as any).admin = decoded; 
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });

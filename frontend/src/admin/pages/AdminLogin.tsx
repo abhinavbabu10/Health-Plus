@@ -18,7 +18,7 @@ const AdminLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // ✅ If logged in already, redirect
+ 
   useEffect(() => {
     if (adminToken) navigate("/admin/dashboard");
   }, [adminToken, navigate]);
@@ -41,13 +41,13 @@ const AdminLogin: React.FC = () => {
 
     if (!validateForm()) return;
 
-    // ✅ Clear old session before login
+   
     localStorage.removeItem("userToken");
     localStorage.removeItem("userData");
 
     const result = await dispatch(adminLogin({ email, password }));
 
-    // ✅ Navigate only on success
+
     if (adminLogin.fulfilled.match(result)) {
       navigate("/admin/dashboard");
     }

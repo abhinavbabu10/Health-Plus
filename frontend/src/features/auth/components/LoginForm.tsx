@@ -15,7 +15,8 @@ const LoginForm: React.FC = () => {
     e.preventDefault();
     const resultAction = await dispatch(login({ email, password }));
     if (login.fulfilled.match(resultAction)) {
-      // Redirect based on role
+    
+      
       switch (resultAction.payload.user.role) {
         case "admin":
           navigate("/admin");

@@ -134,16 +134,15 @@ const SignupForm: React.FC = () => {
 
   setErrors(newErrors);
 
-  // ❌ Stop if there are validation errors
+ 
   if (Object.keys(newErrors).length > 0) return;
 
-  // 🚫 Prevent admin signup from user side
+
   if (formData.role === "admin") {
     alert("⚠️ Admin accounts cannot be created through user signup.");
     return;
   }
 
-  // ✅ Proceed with normal signup
   const resultAction = await dispatch(signupUser(formData));
 
   if (signupUser.fulfilled.match(resultAction)) {
@@ -356,7 +355,7 @@ const SignupForm: React.FC = () => {
                   required
                 >
                   <option value="patient">Patient</option>
-                  <option value="doctor">Doctor</option>
+                  {/* <option value="doctor">Doctor</option> */}
                   {/* <option value="admin">Admin</option> */}
                 </select>
               </div>

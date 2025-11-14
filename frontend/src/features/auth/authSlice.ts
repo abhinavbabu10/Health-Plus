@@ -1,9 +1,10 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import type { RootState } from "../../app/store";
 import axios from "axios";
+import type { RootState } from "../../app/store";
 import { loginUser } from "../../app/api/authApi";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 
 interface User {
   id: string;
@@ -18,6 +19,7 @@ interface AuthState {
   error: string | null;
 }
 
+
 const initialState: AuthState = {
   token: localStorage.getItem("userToken") || null,
   user: localStorage.getItem("userData")
@@ -27,9 +29,12 @@ const initialState: AuthState = {
   error: null,
 };
 
+
 export const selectAuth = (state: RootState) => state.auth;
 
 
+
+// ✅ Signup
 export const signupUser = createAsyncThunk<
   { message: string },
   {
@@ -44,11 +49,13 @@ export const signupUser = createAsyncThunk<
   },
   { rejectValue: string }
 >("auth/signupUser", async (data, { rejectWithValue }) => {
-     try {
-      const response = await axios.post("http://localhost:5000/api/auth/signup", data);
-      console.log("🔹 Signup API Response:", response.data); // ✅ See if OTP comes here
-      return response.data;
-} catch (error) {
+  try {
+    const response = await axios.post(`${API_URL}/auth/signup`, data, {
+      headers: { "Content-Type": "application/json" },
+    });
+    console.log("🔹 Signup API Response:", response.data);
+    return response.data;
+  } catch (error) {
     if (axios.isAxiosError(error)) {
       return rejectWithValue(error.response?.data?.message || "Signup failed");
     }
@@ -56,26 +63,28 @@ export const signupUser = createAsyncThunk<
   }
 });
 
-
+// ✅ Verify OTP
 export const verifyOtp = createAsyncThunk<
   { token: string; user: User },
   { email: string; otp: string },
   { rejectValue: string }
 >("auth/verifyOtp", async ({ email, otp }, { rejectWithValue }) => {
   try {
-    const res = await axios.post(`${API_URL}/auth/verify-otp`, { email, otp }, {
-      headers: { "Content-Type": "application/json" },
-    });
+    const res = await axios.post(
+      `${API_URL}/auth/verify-otp`,
+      { email, otp },
+      { headers: { "Content-Type": "application/json" } }
+    );
     return res.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      return rejectWithValue(error.response?.data?.message || "OTP failed");
+      return rejectWithValue(error.response?.data?.message || "OTP verification failed");
     }
     return rejectWithValue("OTP verification failed");
   }
 });
 
-
+// ✅ Login
 export const login = createAsyncThunk<
   { token: string; user: User },
   { email: string; password: string },
@@ -100,16 +109,15 @@ const authSlice = createSlice({
     logout(state) {
       state.token = null;
       state.user = null;
-    localStorage.removeItem("userToken");
-localStorage.removeItem("userData");
-
+      localStorage.removeItem("userToken");
+      localStorage.removeItem("userData");
     },
     loadUserFromStorage(state) {
-      const token = localStorage.getItem("token");
-      const user = localStorage.getItem("user");
-      if (token && user) {
-        state.token = token;
-        state.user = JSON.parse(user);
+      const storedToken = localStorage.getItem("userToken");
+      const storedUser = localStorage.getItem("userData");
+      if (storedToken && storedUser) {
+        state.token = storedToken;
+        state.user = JSON.parse(storedUser);
       }
     },
     setError(state, action: PayloadAction<string | null>) {
@@ -118,7 +126,7 @@ localStorage.removeItem("userData");
   },
 
   extraReducers: (builder) => {
-    
+    // 🟢 Signup
     builder
       .addCase(signupUser.pending, (state) => {
         state.loading = true;
@@ -132,7 +140,7 @@ localStorage.removeItem("userData");
         state.error = action.payload ?? "Signup failed";
       });
 
- 
+    // 🟢 Verify OTP
     builder
       .addCase(verifyOtp.pending, (state) => {
         state.loading = true;
@@ -141,16 +149,15 @@ localStorage.removeItem("userData");
         state.loading = false;
         state.token = action.payload.token;
         state.user = action.payload.user;
-      localStorage.setItem("userToken", action.payload.token);
-localStorage.setItem("userData", JSON.stringify(action.payload.user));
-
+        localStorage.setItem("userToken", action.payload.token);
+        localStorage.setItem("userData", JSON.stringify(action.payload.user));
       })
       .addCase(verifyOtp.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "OTP verification failed";
       });
 
- 
+    // 🟢 Login
     builder
       .addCase(login.pending, (state) => {
         state.loading = true;
@@ -162,9 +169,8 @@ localStorage.setItem("userData", JSON.stringify(action.payload.user));
           state.loading = false;
           state.token = action.payload.token;
           state.user = action.payload.user;
-         localStorage.setItem("userToken", action.payload.token);
-localStorage.setItem("userData", JSON.stringify(action.payload.user));
-
+          localStorage.setItem("userToken", action.payload.token);
+          localStorage.setItem("userData", JSON.stringify(action.payload.user));
         }
       )
       .addCase(login.rejected, (state, action) => {
@@ -173,6 +179,7 @@ localStorage.setItem("userData", JSON.stringify(action.payload.user));
       });
   },
 });
+
 
 export const { logout, loadUserFromStorage, setError } = authSlice.actions;
 export default authSlice.reducer;
