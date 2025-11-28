@@ -1,4 +1,3 @@
-// src/doctor/pages/components/DoctorSidebar.tsx
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Home, Calendar, Users, FileText, Settings, LogOut } from "lucide-react";

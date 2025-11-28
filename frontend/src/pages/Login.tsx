@@ -1,4 +1,3 @@
-// src/pages/Login.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
@@ -15,7 +14,7 @@ const Login: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  // single source of truth: redux selectors
+  
   const { token, user, loading, error } = useAppSelector(selectAuth);
   const { adminToken } = useAppSelector(selectAdminAuth);
 
@@ -25,9 +24,8 @@ const Login: React.FC = () => {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
 
-  // Navigate only when tokens/user change
+
   useEffect(() => {
-    // if admin session exists, prefer admin dashboard
     if (adminToken) {
       if (window.location.pathname !== "/admin/dashboard") {
         navigate("/admin/dashboard");
@@ -35,8 +33,6 @@ const Login: React.FC = () => {
       return;
     }
 
-    // if normal user logged in, go to /home
-// If logged-in user is a PATIENT → go to home
 if (token && user && user.role === "patient") {
   if (window.location.pathname !== "/home") {
     navigate("/home");
@@ -48,10 +44,10 @@ if (token && user && user.role === "doctor") {
   dispatch(setError("Doctors cannot log in from the user side."));
   return;
 }
-    // if token present but role is admin (edge case), block and show error
+
     if (token && user && user.role === "admin") {
       dispatch(setError("Admins cannot log in from the user side."));
-      // ensure we don't send them to /home
+    
     }
   }, [adminToken, token, user, navigate, dispatch]);
 
@@ -96,12 +92,12 @@ if (token && user && user.role === "doctor") {
     setFormErrors({ email: emailError, password: passwordError });
 
     if (!emailError && !passwordError) {
-      // dispatch login thunk
+  
       dispatch(login({ email, password }))
   .unwrap()
   .then((res) => {
 
-    // block admin
+
     if (res.user.role === "admin") {
       dispatch(setError("Admins cannot log in from the user side."));
       localStorage.removeItem("userToken");
@@ -109,7 +105,7 @@ if (token && user && user.role === "doctor") {
       return;
     }
 
-    // block doctor
+
     if (res.user.role === "doctor") {
       dispatch(setError("Doctors must log in from the doctor login page."));
       localStorage.removeItem("userToken");
@@ -117,12 +113,11 @@ if (token && user && user.role === "doctor") {
       return;
     }
 
-    // allow only patient
+  
     navigate("/home");
   })
 
         .catch(() => {
-          // errors are handled in slice; nothing extra needed here
         });
     }
   };

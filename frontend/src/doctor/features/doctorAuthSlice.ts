@@ -19,18 +19,20 @@ interface DoctorAuthState {
   error: string | null;
 }
 
+const savedDoctor = localStorage.getItem("doctorData");
+const parsedDoctor: Doctor | null =
+  savedDoctor && savedDoctor !== "undefined"
+    ? JSON.parse(savedDoctor)
+    : null;
+
 const initialState: DoctorAuthState = {
   doctorToken: localStorage.getItem("doctorToken"),
-  doctor: localStorage.getItem("doctorData")
-    ? JSON.parse(localStorage.getItem("doctorData")!)
-    : null,
+  doctor: parsedDoctor,
   loading: false,
   error: null,
 };
 
-// ---------------------------
-// Login Thunk
-// ---------------------------
+
 export const doctorLogin = createAsyncThunk<
   { token: string; doctor: Doctor },
   { email: string; password: string },
@@ -47,9 +49,6 @@ export const doctorLogin = createAsyncThunk<
   }
 });
 
-// ---------------------------
-// Slice
-// ---------------------------
 
 const doctorAuthSlice = createSlice({
   name: "doctorAuth",
@@ -78,11 +77,15 @@ const doctorAuthSlice = createSlice({
           state.doctor = action.payload.doctor;
           state.doctorToken = action.payload.token;
 
-          localStorage.setItem("doctorToken", action.payload.token);
-          localStorage.setItem(
-            "doctorData",
-            JSON.stringify(action.payload.doctor)
-          );
+          if (action.payload.token) {
+            localStorage.setItem("doctorToken", action.payload.token);
+          }
+          if (action.payload.doctor) {
+            localStorage.setItem(
+              "doctorData",
+              JSON.stringify(action.payload.doctor)
+            );
+          }
         }
       )
       .addCase(doctorLogin.rejected, (state, action) => {
@@ -92,7 +95,6 @@ const doctorAuthSlice = createSlice({
   },
 });
 
-// ---------------------------
 export const { doctorLogout, setDoctorError } = doctorAuthSlice.actions;
 export const selectDoctorAuth = (state: RootState) => state.doctorAuth;
 export default doctorAuthSlice.reducer;

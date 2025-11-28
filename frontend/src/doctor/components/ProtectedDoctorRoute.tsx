@@ -1,4 +1,3 @@
-// src/doctor/pages/components/ProtectedDoctorRoute.tsx
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAppSelector } from "../../app/hooks";
@@ -16,7 +15,7 @@ const ProtectedDoctorRoute = ({ children }: Props) => {
   }
 
   if (doctor.role !== "doctor") {
-    // safety: if not doctor, redirect to main login
+ 
     return <Navigate to="/login" replace />;
   }
 

@@ -5,107 +5,87 @@ import nodemailer from "nodemailer";
 import { UserModel } from "../../infrastructure/models/UserModel";
 import { EMAIL_USER, EMAIL_PASS, JWT_SECRET } from "../../config/environment";
 
-const otpStore: Record<string, string> = {};
+interface PendingUser {
+  fullName: string;
+  email: string;
+  password: string; 
+  role: "patient" | "doctor";
+  gender?: "male" | "female" | "other";
+  dob?: string;
+}
+
+const otpStore: Record<string, PendingUser | string> = {};
 
 export class AuthController {
 
 
-async signup(req: Request, res: Response) {
-  try {
-    console.log("📩 Received /api/auth/signup");
-    const { fullName, email, password, role, gender, dob } = req.body;
+  async signup(req: Request, res: Response) {
+    try {
+      const { fullName, email, password, role, gender, dob } = req.body;
 
-    console.log("Received fields:", { fullName, email, password, role });
+      if (!fullName || !email || !password || !role) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
 
-    
-    if (!fullName || !email || !password || !role) {
-      console.log("❌ Validation failed: Missing required fields");
-      return res.status(400).json({ message: "All fields are required" });
-    }
+      const existing = await UserModel.findOne({ email });
+      if (existing) return res.status(400).json({ message: "User already exists" });
 
-
-    const existing = await UserModel.findOne({ email });
-    if (existing) {
-      console.log("❌ User already exists:", email);
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    otpStore[email] = otp;
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      otpStore[email] = otp;
     console.log(`✅ Generated OTP for ${email}: ${otp}`);
     console.log(`otp,${otp}`)
 
- 
-    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASS,
-      },
-    });
-
-    transporter.verify((error, success) => {
-      if (error) console.log("❌ SMTP verification failed:", error);
-      else console.log("✅ Gmail SMTP ready");
-    });
-
-    const mailOptions = {
-      from: `"HealthPlus App" <${EMAIL_USER}>`,
-      to: email,
-      subject: "Your HealthPlus OTP Verification Code",
-      text: `Hello ${fullName},\n\nYour OTP is: ${otp}\nThis code is valid for 60 seconds.\n\nBest,\nHealthPlus Team`,
-    };
+    
+      const hashedPassword = await bcrypt.hash(password, 10);
 
  
-    try {
-      await transporter.sendMail(mailOptions);
-      console.log("✅ OTP email sent successfully to:", email);
-    } catch (mailError) {
-      console.error("❌ Failed to send OTP email:", mailError);
-      return res.status(500).json({ message: "Failed to send OTP email" });
+      otpStore[`${email}_data`] = {
+        fullName,
+        email,
+        password: hashedPassword,
+        role,
+        gender,
+        dob,
+      };
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: { user: EMAIL_USER, pass: EMAIL_PASS },
+      });
+
+      await transporter.sendMail({
+        from: `"HealthPlus App" <${EMAIL_USER}>`,
+        to: email,
+        subject: "Your HealthPlus OTP Verification Code",
+        text: `Hello ${fullName},\n\nYour OTP is: ${otp}\nThis code is valid for 60 seconds.\n\nBest,\nHealthPlus Team`,
+      });
+
+      return res.status(200).json({ message: "OTP sent to your email. Please verify to complete signup." });
+
+    } catch (error: any) {
+      console.error("Signup Error:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
-
-  
-    otpStore[`${email}_data`] = JSON.stringify({
-      fullName,
-      email,
-      password: hashedPassword,
-      role,
-      gender,
-      dob,
-    });
-
-    return res.status(200).json({
-      message: "OTP sent to your email. Please verify to complete signup.",
-    });
-
-  } catch (error: any) {
-    console.error("❌ Signup Error:", error.message || error);
-    return res.status(500).json({ message: error.message || "Internal server error" });
   }
-}
-
 
   async verifyOtp(req: Request, res: Response) {
     try {
       const { email, otp } = req.body;
 
       const storedOtp = otpStore[email];
-      if (!storedOtp)
-        return res.status(400).json({ message: "OTP expired or not found" });
+      if (!storedOtp) return res.status(400).json({ message: "OTP expired or not found" });
+      if (storedOtp !== otp) return res.status(400).json({ message: "Invalid OTP" });
 
-      if (storedOtp !== otp)
-        return res.status(400).json({ message: "Invalid OTP" });
+      const userData = otpStore[`${email}_data`] as PendingUser;
 
-      const userData = JSON.parse(otpStore[`${email}_data`]);
       const newUser = await UserModel.create({
         name: userData.fullName,
         email: userData.email,
         password: userData.password,
         role: userData.role,
+        gender: userData.gender,
+        dob: userData.dob,
       });
 
       delete otpStore[email];
@@ -118,85 +98,81 @@ async signup(req: Request, res: Response) {
           name: newUser.name,
           email: newUser.email,
           role: newUser.role,
+          gender: newUser.gender,
+          dob: newUser.dob,
         },
       });
+
     } catch (error: any) {
-      console.error("Verify OTP Error:", error.message || error);
-      return res.status(500).json({ message: error.message || "Internal server error" });
+      console.error("Verify OTP Error:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 
+  async resendOtp(req: Request, res: Response) {
+    try {
+      const { email } = req.body;
+      const userData = otpStore[`${email}_data`] as PendingUser;
+      if (!userData) return res.status(400).json({ message: "User data not found. Please sign up again." });
 
-async resendOtp(req: Request, res: Response) {
-  try {
-    const { email } = req.body;
-    const userData = otpStore[`${email}_data`];
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      otpStore[email] = otp;
 
-    if (!userData) {
-      return res.status(400).json({ message: "User data not found. Please sign up again." });
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: { user: EMAIL_USER, pass: EMAIL_PASS },
+      });
+
+      await transporter.sendMail({
+        from: `"HealthPlus App" <${EMAIL_USER}>`,
+        to: email,
+        subject: "New OTP Code - HealthPlus App",
+        text: `Hello ${userData.fullName},\n\nYour new OTP is: ${otp}\nIt is valid for 60 seconds.\n\nBest,\nHealthPlus Team`,
+      });
+
+      return res.status(200).json({ message: "New OTP sent successfully." });
+
+    } catch (error: any) {
+      console.error("Resend OTP Error:", error);
+      return res.status(500).json({ message: "Failed to resend OTP." });
     }
-
-    const parsed = JSON.parse(userData);
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    otpStore[email] = otp;
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASS,
-      },
-    });
-
-    await transporter.sendMail({
-      from: `"HealthPlus App" <${EMAIL_USER}>`,
-      to: email,
-      subject: "New OTP Code - HealthPlus App",
-      text: `Hello ${parsed.fullName},\n\nYour new OTP is: ${otp}\nIt is valid for 60 seconds.\n\nBest,\nHealthPlus Team`,
-    });
-
-    console.log(`🔁 Resent OTP to ${email}: ${otp}`);
-    return res.status(200).json({ message: "New OTP sent successfully." });
-
-  } catch (error: any) {
-    console.error("Resend OTP Error:", error);
-    return res.status(500).json({ message: "Failed to resend OTP." });
   }
+
+  async login(req: Request, res: Response) {
+    try {
+      const { email, password } = req.body;
+      const user = await UserModel.findOne({ email });
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      if (user.isBlocked) {
+  return res.status(403).json({ message: "Your account has been blocked by the admin." });
 }
 
 
+      if (user.role === "admin") {
+        return res.status(403).json({ message: "Admins cannot log in from the user side." });
+      }
 
+      const valid = await bcrypt.compare(password, user.password);
+      if (!valid) return res.status(400).json({ message: "Invalid password" });
 
+      const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: "1d" });
 
-async login(req: Request, res: Response) {
-  try {
-    const { email, password } = req.body;
-    const user = await UserModel.findOne({ email });
+      return res.status(200).json({
+        message: "Login successful",
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          role: user.role,
+          gender: user.gender,
+          dob: user.dob,
+        },
+      });
 
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-
-    if (user.role === "admin") {
-      return res.status(403).json({ message: "Admins cannot log in from the user side." });
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
-
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.status(400).json({ message: "Invalid password" });
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-
-    return res.status(200).json({
-      message: "Login successful",
-      token,
-      user: { id: user._id, name: user.name, role: user.role },
-    });
-  } catch (error: any) {
-    console.error("Login Error:", error.message || error);
-    return res.status(500).json({ message: error.message || "Internal server error" });
   }
-}
 }

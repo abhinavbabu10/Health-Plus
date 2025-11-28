@@ -1,26 +1,14 @@
 import { Router } from "express";
-import {
-  createPatient,
-  getPatients,
-  getPatientById,
-  updatePatient,
-  deletePatient,
-} from "../controllers/patientController";
-import { authMiddleware } from "../middlewares/authMiddleware";
+import { AdminPatientController } from "../controllers/patientController";
+import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware"; 
 
 const router = Router();
+const controller = new AdminPatientController();
+
+router.get("/", controller.getAllPatients);
 
 
-router.post("/", authMiddleware(["admin"]), createPatient);
+router.patch("/block/:id", adminAuthMiddleware, controller.blockPatient);
+router.patch("/unblock/:id", adminAuthMiddleware, controller.unblockPatient);
 
-router.get("/", authMiddleware(["admin"]), getPatients);
-
-
-router.get("/:id", authMiddleware(["admin", "doctor", "patient"]), getPatientById);
-
-
-router.put("/:id", authMiddleware(["admin", "patient"]), updatePatient);
-
-router.delete("/:id", authMiddleware(["admin"]), deletePatient);
-
-export default router;
+export { router as adminPatientRoutes };

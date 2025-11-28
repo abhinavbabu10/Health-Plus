@@ -126,7 +126,6 @@ const SignupForm: React.FC = () => {
   e.preventDefault();
   const newErrors: FormErrors = {};
 
-  // Validate all fields before proceeding
   (Object.keys(formData) as Array<keyof FormData>).forEach((key) => {
     const error = validateField(key, formData[key]);
     if (error) newErrors[key] = error;
@@ -190,17 +189,14 @@ const SignupForm: React.FC = () => {
         backgroundRepeat: "no-repeat"
       }}
     >
-      {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-cyan-800/60 to-teal-900/70 backdrop-blur-sm"></div>
       
-      {/* Animated particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-400/20 rounded-full blur-3xl animate-pulse delay-700"></div>
       </div>
 
       <div className="relative w-full max-w-2xl bg-white/95 shadow-2xl rounded-2xl p-6 backdrop-blur-xl border border-white/20 animate-fadeIn my-6">
-        {/* Header */}
         <div className="text-center mb-4">
           <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full mb-2 shadow-lg">
             <User className="w-6 h-6 text-white" />
@@ -215,10 +211,8 @@ const SignupForm: React.FC = () => {
 
         {step === "form" ? (
           <form onSubmit={handleSubmit} className="space-y-2">
-            {/* Two Column Layout for better space utilization */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
               
-              {/* Full Name */}
               <div className="relative">
                 <User className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
                 <input
@@ -234,7 +228,6 @@ const SignupForm: React.FC = () => {
                 {errors.fullName && <p className="text-red-500 text-[10px] mt-0.5 ml-1">{errors.fullName}</p>}
               </div>
 
-              {/* Email */}
               <div className="relative">
                 <Mail className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
                 <input
@@ -250,7 +243,6 @@ const SignupForm: React.FC = () => {
                 {errors.email && <p className="text-red-500 text-[10px] mt-0.5 ml-1">{errors.email}</p>}
               </div>
 
-              {/* Phone */}
               <div className="relative">
                 <Phone className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
                 <input
@@ -266,7 +258,6 @@ const SignupForm: React.FC = () => {
                 {errors.phone && <p className="text-red-500 text-[10px] mt-0.5 ml-1">{errors.phone}</p>}
               </div>
 
-              {/* Gender */}
               <div className="relative">
                 <select
                   name="gender"
@@ -283,7 +274,6 @@ const SignupForm: React.FC = () => {
                 </select>
               </div>
 
-              {/* Password */}
               <div className="relative">
                 <Lock className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
                 <input
@@ -306,7 +296,6 @@ const SignupForm: React.FC = () => {
                 {errors.password && <p className="text-red-500 text-[10px] mt-0.5 ml-1">{errors.password}</p>}
               </div>
 
-              {/* Confirm Password */}
               <div className="relative">
                 <Lock className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
                 <input
@@ -331,7 +320,6 @@ const SignupForm: React.FC = () => {
                 )}
               </div>
 
-              {/* DOB */}
               <div className="relative">
                 <Calendar className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                 <input
@@ -345,7 +333,6 @@ const SignupForm: React.FC = () => {
                 />
               </div>
 
-              {/* Role */}
               <div className="relative">
                 <select
                   name="role"
@@ -355,13 +342,12 @@ const SignupForm: React.FC = () => {
                   required
                 >
                   <option value="patient">Patient</option>
-                  {/* <option value="doctor">Doctor</option> */}
-                  {/* <option value="admin">Admin</option> */}
+              
                 </select>
               </div>
             </div>
 
-            {/* Address - Full Width */}
+          
             <div className="relative">
               <MapPin className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-gray-400" />
               <textarea
@@ -377,7 +363,6 @@ const SignupForm: React.FC = () => {
               {errors.address && <p className="text-red-500 text-[10px] mt-0.5 ml-1">{errors.address}</p>}
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-2.5 rounded-lg hover:from-blue-700 hover:to-cyan-700 text-sm font-semibold mt-3 shadow-lg transition-all duration-300 hover:shadow-xl transform hover:-translate-y-0.5"
@@ -385,7 +370,6 @@ const SignupForm: React.FC = () => {
               Send OTP
             </button>
 
-            {/* Divider */}
             <div className="relative my-3">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
@@ -395,7 +379,6 @@ const SignupForm: React.FC = () => {
               </div>
             </div>
 
-            {/* Google Button */}
             <button
               type="button"
               onClick={handleGoogleSignup}

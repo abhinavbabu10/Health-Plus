@@ -1,4 +1,3 @@
-// src/doctor/pages/DoctorLogin.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
@@ -22,7 +21,6 @@ const DoctorLogin: React.FC = () => {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
 
-  // ✔ Redirect if already logged in
   useEffect(() => {
     if (doctorToken) {
       navigate("/doctor/dashboard");
@@ -66,18 +64,29 @@ const DoctorLogin: React.FC = () => {
     setFormErrors((prev) => ({ ...prev, [name]: newErr }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+useEffect(() => {
+  console.log("Doctor token changed:", doctorToken);
+  if (doctorToken) {
+    console.log("Navigating to /doctor/dashboard");
+    navigate("/doctor/dashboard");
+  }
+}, [doctorToken, navigate]);
 
-    const emailErr = validateField("email", email);
-    const passErr = validateField("password", password);
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
 
-    setFormErrors({ email: emailErr, password: passErr });
+  const emailErr = validateField("email", email);
+  const passErr = validateField("password", password);
 
-    if (!emailErr && !passErr) {
-      dispatch(doctorLogin({ email, password }));
-    }
-  };
+  setFormErrors({ email: emailErr, password: passErr });
+
+  if (!emailErr && !passErr) {
+    console.log("Dispatching doctorLogin with:", { email, password });
+    dispatch(doctorLogin({ email, password }));
+  } else {
+    console.log("Validation errors:", { emailErr, passErr });
+  }
+};
 
   const inputClass = (name: string) => {
     const base =
@@ -97,10 +106,8 @@ const DoctorLogin: React.FC = () => {
       className="min-h-screen flex items-center justify-center bg-cover bg-center relative px-6"
       style={{ backgroundImage: "url('/assets/login-bg.jpg')" }}
     >
-      {/* Glowing overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-cyan-700/70 to-teal-800/70 backdrop-blur-sm"></div>
 
-      {/* Login Card */}
       <div className="relative z-10 w-full max-w-md bg-white/95 rounded-2xl shadow-2xl p-8 border border-white/20 backdrop-blur-xl animate-fadeIn">
         <div className="text-center mb-6">
           <div className="w-14 h-14 bg-blue-500 rounded-full mx-auto flex items-center justify-center shadow-lg">
@@ -110,14 +117,11 @@ const DoctorLogin: React.FC = () => {
           <p className="text-gray-600 text-xs">Access your doctor dashboard</p>
         </div>
 
-        {/* Error */}
         {error && (
           <p className="text-red-600 text-center text-sm mb-4">{error}</p>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email */}
           <div>
             <input
               name="email"
@@ -134,7 +138,6 @@ const DoctorLogin: React.FC = () => {
             )}
           </div>
 
-          {/* Password */}
           <div className="relative">
             <input
               name="password"
@@ -147,7 +150,6 @@ const DoctorLogin: React.FC = () => {
               required
             />
 
-            {/* Toggle */}
             <button
               type="button"
               className="absolute right-3 top-2.5 text-gray-400"
@@ -165,7 +167,6 @@ const DoctorLogin: React.FC = () => {
             )}
           </div>
 
-          {/* Login Button */}
           <button
             type="submit"
             disabled={loading}
@@ -179,7 +180,6 @@ const DoctorLogin: React.FC = () => {
           </button>
         </form>
 
-        {/* Signup link */}
         <p className="text-center text-sm text-gray-600 mt-4">
           Don't have an account?{" "}
           <Link
@@ -191,7 +191,6 @@ const DoctorLogin: React.FC = () => {
         </p>
       </div>
 
-      {/* Animation */}
       <style>{`
         @keyframes fadeIn {
           from {opacity:0; transform:translateY(20px);}

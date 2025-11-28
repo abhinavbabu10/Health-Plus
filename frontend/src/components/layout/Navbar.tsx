@@ -1,27 +1,40 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../../app/store";
 import { logout as userLogout } from "../../features/auth/authSlice";
 import { adminLogout } from "../../admin/features/adminAuthSlice";
+import { useEffect } from "react";
 
 const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
 
   const user = useSelector((state: RootState) => state.auth.user);
   const admin = useSelector((state: RootState) => state.adminAuth.adminUser);
 
   const isLoggedIn = !!user || !!admin;
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   const handleLogout = () => {
     if (admin) {
       dispatch(adminLogout());
+      localStorage.removeItem("role");
       navigate("/admin/login");
     } else {
       dispatch(userLogout());
+      localStorage.removeItem("role");
       navigate("/");
     }
   };
+
+  useEffect(() => {
+    window.history.scrollRestoration = "manual";
+  }, []);
+
+  
+  if (isAdminRoute) return null;
 
   return (
     <nav className="bg-white shadow-md fixed w-full top-0 z-50">
@@ -47,6 +60,7 @@ const Navbar = () => {
                   Hi, {user?.name?.split(" ")[0] || "User"}
                 </span>
               )}
+
               <button
                 onClick={handleLogout}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
@@ -56,10 +70,7 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Link
-                to="/login"
-                className="text-blue-600 font-medium hover:text-blue-700"
-              >
+              <Link to="/login" className="text-blue-600 font-medium hover:text-blue-700">
                 Login
               </Link>
               <Link

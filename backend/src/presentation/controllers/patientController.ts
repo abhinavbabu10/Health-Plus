@@ -1,56 +1,65 @@
-import { Request, Response, NextFunction } from "express";
-import { PatientService } from "../../infrastructure/services/PatientService";
+import { Request, Response } from "express";
+import { UserModel } from "../../infrastructure/models/UserModel";
+import mongoose from "mongoose";
 
-const patientService = new PatientService();
+export class AdminPatientController {
+ 
+  async getAllPatients(req: Request, res: Response) {
+    try {
+      const patients = await UserModel.find({ role: "patient" })
+        .select("name email role isVerified createdAt gender dob isBlocked")
+        .sort({ createdAt: -1 });
 
-
-export const createPatient = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const patient = await patientService.createPatient(req.body);
-    res.status(201).json({ success: true, data: patient });
-  } catch (error) {
-    next(error);
+      return res.status(200).json({ patients });
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+      return res.status(500).json({ message: "Failed to fetch patients" });
+    }
   }
-};
 
 
-export const getPatients = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const patients = await patientService.getAllPatients();
-    res.json({ success: true, data: patients });
-  } catch (error) {
-    next(error);
+  async blockPatient(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "Invalid user id" });
+      }
+
+      const patient = await UserModel.findOneAndUpdate(
+        { _id: id, role: "patient" },
+        { isBlocked: true },
+        { new: true, select: "name email isBlocked" }
+      );
+
+      if (!patient) return res.status(404).json({ message: "Patient not found" });
+
+      return res.status(200).json({ message: "Patient blocked", patient });
+    } catch (error) {
+      console.error("Error blocking patient:", error);
+      return res.status(500).json({ message: "Failed to block patient" });
+    }
   }
-};
 
 
-export const getPatientById = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const patient = await patientService.getPatientById(req.params.id);
-    if (!patient) return res.status(404).json({ success: false, message: "Patient not found" });
-    res.json({ success: true, data: patient });
-  } catch (error) {
-    next(error);
+  async unblockPatient(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "Invalid user id" });
+      }
+
+      const patient = await UserModel.findOneAndUpdate(
+        { _id: id, role: "patient" },
+        { isBlocked: false },
+        { new: true, select: "name email isBlocked" }
+      );
+
+      if (!patient) return res.status(404).json({ message: "Patient not found" });
+
+      return res.status(200).json({ message: "Patient unblocked", patient });
+    } catch (error) {
+      console.error("Error unblocking patient:", error);
+      return res.status(500).json({ message: "Failed to unblock patient" });
+    }
   }
-};
-
-
-export const updatePatient = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const updated = await patientService.updatePatient(req.params.id, req.body);
-    if (!updated) return res.status(404).json({ success: false, message: "Patient not found" });
-    res.json({ success: true, data: updated });
-  } catch (error) {
-    next(error);
-  }
-};
-
-
-export const deletePatient = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await patientService.deletePatient(req.params.id);
-    res.json({ success: true, message: "Patient deleted successfully" });
-  } catch (error) {
-    next(error);
-  }
-};
+}

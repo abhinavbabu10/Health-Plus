@@ -1,13 +1,11 @@
 import express from "express";
-import { DoctorAuthController } from "../controllers/doctorAuthController"
+import { DoctorAuthController } from "../controllers/doctorAuthController";
 
 const router = express.Router();
 const controller = new DoctorAuthController();
 
-// POST /api/doctor/auth/login
-router.post("/login", controller.login);
+router.post("/register", (req, res, next) => controller.register(req, res, next));
 
-// POST /api/doctor/auth/register (optional)
-router.post("/register", controller.register);
+router.post("/login", (req, res, next) => controller.login(req, res, next));
 
 export { router as doctorAuthRoutes };

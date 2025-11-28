@@ -1,46 +1,31 @@
-import { UserModel } from "../models/UserModel";
-import bcrypt from "bcryptjs";
+import { DoctorModel, IDoctor } from "../models/DoctorModel";
 import jwt from "jsonwebtoken";
 
+const JWT_SECRET = process.env.JWT_SECRET || "secret123"; 
+
 export class DoctorAuthService {
-  async login(email: string, password: string) {
-    const doctor = await UserModel.findOne({ email, role: "doctor" });
 
-    if (!doctor) throw new Error("Doctor not found");
-
-    const isMatch = await bcrypt.compare(password, doctor.password);
-    if (!isMatch) throw new Error("Invalid password");
-
-    const token = jwt.sign(
-      { id: doctor._id, role: "doctor" },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
-    );
-
-    return {
-      token,
-      doctor: {
-        id: doctor._id,
-        name: doctor.name,
-        email: doctor.email,
-        role: doctor.role,
-      },
-    };
-  }
-
-  async registerDoctor(data: any) {
-    const exists = await UserModel.findOne({ email: data.email });
+  async register(fullName: string, email: string, password: string): Promise<IDoctor> {
+    const exists = await DoctorModel.findOne({ email });
     if (exists) throw new Error("Email already registered");
 
-    const hashed = await bcrypt.hash(data.password, 10);
+    const doctor = new DoctorModel({ fullName, email, password });
+    await doctor.save();
+    return doctor;
+  }
 
-    const doctor = await UserModel.create({
-      name: data.name,
-      email: data.email,
-      password: hashed,
-      role: "doctor",
-    });
 
-    return { doctor };
+  async login(email: string, password: string): Promise<IDoctor> {
+    const doctor = await DoctorModel.findOne({ email });
+    if (!doctor) throw new Error("Invalid email or password");
+
+    const isMatch = await doctor.comparePassword(password);
+    if (!isMatch) throw new Error("Invalid email or password");
+
+    return doctor;
+  }
+
+  generateToken(doctorId: string) {
+    return jwt.sign({ id: doctorId, role: "doctor" }, JWT_SECRET, { expiresIn: "7d" });
   }
 }

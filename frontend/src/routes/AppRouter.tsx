@@ -5,11 +5,10 @@ import ProtectedRoute from "./ProtectedRoute";
 import Signup from "../pages/Signup";
 import Login from "../pages/Login";
 
-// Admin Imports
 import AdminLogin from "../admin/pages/AdminLogin";
 import AdminDashboard from "../admin/pages/AdminDashboard";
-import Doctors from "../admin/pages/Doctors";
-import Patients from "../admin/pages/Patients";
+import Doctors from "../admin/pages/Doctor/Doctors";
+import Patients from "../admin/pages/Patients/Patients";
 import Appointments from "../admin/pages/Appointments";
 import Reports from "../admin/pages/Reports";
 import SettingsPage from "../admin/pages/Settings";
@@ -22,7 +21,6 @@ import DoctorProtectedRoute from "../doctor/components/ProtectedDoctorRoute";
 const AppRouter = () => {
   return (
     <Routes>
-      {/* 🏠 User Routes */}
       <Route path="/" element={<Home />} />
       <Route
         path="/home"
@@ -50,10 +48,8 @@ const AppRouter = () => {
 
 
 
-      {/* 🧑‍💼 Admin Routes */}
       <Route path="/admin/login" element={<AdminLogin />} />
 
-      {/* 🔒 Protected Admin Routes */}
       <Route
         path="/admin/dashboard"
         element={
@@ -103,7 +99,6 @@ const AppRouter = () => {
         }
       />
 
-      {/* 🚫 Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -1,4 +1,3 @@
-// src/doctor/pages/components/DoctorNavbar.tsx
 import React from "react";
 import { Bell, UserCircle } from "lucide-react";
 import { useAppSelector } from "../../app/hooks";

@@ -2,27 +2,29 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-// ----------------------
-// Types
-// ----------------------
+const authAPI = axios.create({
+  baseURL: `${API_URL}/doctor/auth`,
+  withCredentials: true,
+});
+
 export interface DoctorLoginDto {
   email: string;
   password: string;
 }
 
 export interface DoctorSignupDto {
-  name: string;
+  fullName: string;         
   email: string;
   password: string;
-  specialization: string;
-  experience: number;
-  fees: number;
-  availableDays: string[];
+  specialization?: string;
+  experience?: number;
+  fees?: number;
+  availableDays?: string[];
 }
 
 export interface DoctorUser {
   id: string;
-  name: string;
+  fullName: string;          
   email: string;
   role: "doctor";
 }
@@ -47,22 +49,30 @@ export interface Patient {
   age?: number;
 }
 
-// ----------------------
-// Doctor Auth API
-// ----------------------
-export const doctorLoginApi = async (credentials: DoctorLoginDto) => {
-  const res = await axios.post(`${API_URL}/doctor/auth/login`, credentials);
-  return res.data as { token: string; user: DoctorUser };
-};
+export interface DoctorSignupResponse {
+  success: boolean;
+  data: {
+    id: string;
+    fullName: string;
+    email: string;
+    specialization: string;
+    experience: number;
+  };
+  message?: string;
+}
+
 
 export const doctorSignupApi = async (data: DoctorSignupDto) => {
-  const res = await axios.post(`${API_URL}/doctor/auth/register`, data);
-  return res.data as { message: string };
+  const res = await authAPI.post<DoctorSignupResponse>("/register", data);
+  return res.data; 
 };
 
-// ----------------------
-// Dashboard API
-// ----------------------
+
+export const doctorLoginApi = async (credentials: DoctorLoginDto) => {
+  const res = await authAPI.post("/login", credentials);
+  return res.data as { success: boolean; data: { token: string; doctor: DoctorUser } };
+};
+
 export const getDoctorDashboardSummary = async (
   token: string
 ): Promise<DashboardSummary> => {

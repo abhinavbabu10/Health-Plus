@@ -1,238 +1,117 @@
-// src/doctor/pages/DoctorSignup.tsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { doctorSignupApi } from "../api/doctorApi";
-import { User} from "lucide-react";
+import { doctorSignupApi } from "../api/doctorApi"
+import { User } from "lucide-react";
+import { AxiosError } from "axios";
 
-interface FormErrors {
-  name?: string;
-  email?: string;
-  password?: string;
-  specialization?: string;
-  experience?: string;
-  fees?: string;
-  availableDays?: string;
-}
+
+interface FormErrors { fullName?: string; email?: string; password?: string; }
 
 const DoctorSignup: React.FC = () => {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    specialization: "",
-    experience: "",
-    fees: "",
-    availableDays: "",
-  });
-
+  const [form, setForm] = useState({ fullName: "", email: "", password: "" });
   const [errors, setErrors] = useState<FormErrors>({});
-  const [showPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const validate = () => {
+  const validate = (field?: string) => {
     const newErrors: FormErrors = {};
+    if (!form.fullName.trim()) newErrors.fullName = "Name is required";
+    if (!/^[\w\s]{2,}$/.test(form.fullName)) newErrors.fullName = "Enter valid name";
 
-    if (!form.name.trim()) newErrors.name = "Name is required";
-    if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(form.email))
-      newErrors.email = "Enter a valid email address";
-    if (form.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters";
-    if (!form.specialization.trim())
-      newErrors.specialization = "Specialization is required";
-    if (!form.experience || Number(form.experience) <= 0)
-      newErrors.experience = "Experience must be a positive number";
-    if (!form.fees || Number(form.fees) <= 0)
-      newErrors.fees = "Consultation fee must be positive";
-    if (!form.availableDays.trim())
-      newErrors.availableDays = "Enter available days (e.g., Mon, Tue, Wed)";
+    if (!form.email.trim()) newErrors.email = "Email is required";
+    else if (!/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test(form.email)) newErrors.email = "Enter a valid email";
 
+    if (!form.password) newErrors.password = "Password is required";
+    else if (form.password.length < 8) newErrors.password = "Password must be at least 8 chars";
+
+    if (field) {
+      setErrors(prev => ({ ...prev, [field]: newErrors[field as keyof FormErrors] }));
+      return !newErrors[field as keyof FormErrors];
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    if (errors[e.target.name as keyof FormErrors]) {
-      setErrors({ ...errors, [e.target.name]: "" });
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    validate(name);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setServerError(null);
     if (!validate()) return;
-
     setLoading(true);
-
     try {
-      await doctorSignupApi({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        specialization: form.specialization,
-        experience: Number(form.experience),
-        fees: Number(form.fees),
-        availableDays: form.availableDays.split(",").map((d) => d.trim()),
-      });
+      await doctorSignupApi({ fullName: form.fullName, email: form.email, password: form.password });
+      navigate('/doctor/login');
+    } catch (err: unknown) {
+    let msg = "Signup failed";
 
-      navigate("/doctor/login");
-    } catch {
-  (new Error("Doctor login failed"));
-}
- finally {
-      setLoading(false);
+    if (err instanceof AxiosError) {
+      msg = err.response?.data?.message || err.response?.data?.error || msg;
+    } else if (err instanceof Error) {
+      msg = err.message;
     }
+
+    console.error(err);
+    setServerError(msg);
+  } finally {
+    setLoading(false);
+  }
+
   };
 
-  const inputClass =
-    "w-full border rounded-lg p-2 bg-white/80 backdrop-blur-md shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition";
+  const getInputClass = (field: keyof FormErrors) =>
+    `w-full border rounded-lg p-2 ${errors[field] ? 'border-red-500' : 'border-gray-300'}`;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cover bg-center relative px-6"
-      style={{ backgroundImage: "url('/assets/login-bg.jpg')" }}
-    >
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-cyan-800/60 to-teal-900/70"></div>
-
-      <div className="relative z-10 w-full max-w-lg bg-white/95 backdrop-blur-xl shadow-2xl p-8 rounded-2xl border border-white/20 animate-fadeIn">
+    <div className="min-h-screen flex items-center justify-center px-6">
+      <div className="w-full max-w-lg bg-white p-8 rounded-2xl shadow">
         <div className="text-center mb-6">
-          <div className="w-14 h-14 mx-auto mb-2 rounded-full bg-gradient-to-br from-blue-500 to-teal-400 flex items-center justify-center shadow-lg">
+          <div className="w-14 h-14 mx-auto mb-2 rounded-full bg-blue-500 flex items-center justify-center">
             <User className="text-white w-7 h-7" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-800">Doctor Signup</h2>
+          <h2 className="text-3xl font-bold">Doctor Signup</h2>
           <p className="text-gray-500 text-sm mt-1">Create your doctor account</p>
         </div>
 
-        {/* FORM */}
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        {serverError && <div className="text-red-600 mb-3">{serverError}</div>}
 
-          {/* Name */}
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <input
-              name="name"
-              placeholder="Full Name"
-              value={form.name}
-              onChange={handleChange}
-              className={inputClass}
-            />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+            <input name="fullName" placeholder="Full Name" value={form.fullName} onChange={handleChange} className={getInputClass('fullName')} />
+            {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
           </div>
 
-          {/* Email */}
           <div>
-            <input
-              name="email"
-              type="email"
-              placeholder="Email Address"
-              value={form.email}
-              onChange={handleChange}
-              className={inputClass}
-            />
+            <input name="email" type="email" placeholder="Email Address" value={form.email} onChange={handleChange} className={getInputClass('email')} />
             {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
           </div>
 
-          {/* Password */}
           <div>
-            <input
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              className={inputClass}
-            />
-            {errors.password && (
-              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-            )}
+            <div className="relative">
+              <input name="password" type={showPassword ? "text" : "password"} placeholder="Password" value={form.password} onChange={handleChange} className={getInputClass('password')} />
+              <span className="absolute right-3 top-2 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? 'Hide' : 'Show'}
+              </span>
+            </div>
+            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
           </div>
 
-          {/* Specialization */}
-          <div>
-            <input
-              name="specialization"
-              placeholder="Specialization (e.g., Cardiologist)"
-              value={form.specialization}
-              onChange={handleChange}
-              className={inputClass}
-            />
-            {errors.specialization && (
-              <p className="text-red-500 text-xs mt-1">{errors.specialization}</p>
-            )}
-          </div>
-
-          {/* Experience */}
-          <div>
-            <input
-              name="experience"
-              type="number"
-              placeholder="Experience (Years)"
-              value={form.experience}
-              onChange={handleChange}
-              className={inputClass}
-            />
-            {errors.experience && (
-              <p className="text-red-500 text-xs mt-1">{errors.experience}</p>
-            )}
-          </div>
-
-          {/* Fees */}
-          <div>
-            <input
-              name="fees"
-              type="number"
-              placeholder="Consultation Fee"
-              value={form.fees}
-              onChange={handleChange}
-              className={inputClass}
-            />
-            {errors.fees && (
-              <p className="text-red-500 text-xs mt-1">{errors.fees}</p>
-            )}
-          </div>
-
-          {/* Available Days */}
-          <div>
-            <input
-              name="availableDays"
-              placeholder="Available Days (Mon, Tue, Wed...)"
-              value={form.availableDays}
-              onChange={handleChange}
-              className={inputClass}
-            />
-            {errors.availableDays && (
-              <p className="text-red-500 text-xs mt-1">{errors.availableDays}</p>
-            )}
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 rounded-lg text-white bg-gradient-to-r from-blue-600 to-teal-600 shadow-lg hover:opacity-90 transition font-medium"
-          >
-            {loading ? "Creating Account..." : "Sign Up"}
+          <button type="submit" disabled={loading} className="w-full py-2.5 rounded-lg bg-blue-600 text-white">
+            {loading ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <Link to="/doctor/login" className="text-blue-600 font-semibold hover:underline">
-            Login Here
-          </Link>
+          Already have an account? <Link to="/doctor/login" className="text-blue-600">Login Here</Link>
         </p>
       </div>
-
-      {/* Animations */}
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn { animation: fadeIn 0.6s ease-out; }
-      `}</style>
     </div>
   );
 };

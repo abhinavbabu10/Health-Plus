@@ -1,24 +1,46 @@
 import { Schema, model, Document, Types } from "mongoose";
+import bcrypt from "bcrypt";
 
 export interface IDoctor extends Document {
-  userId: Types.ObjectId;
-  specialization: string;
-  experience: number;
-  fees: number;
-  availableDays: string[];
+  fullName: string;
+  email: string;
+  password: string;
   createdAt: Date;
   updatedAt: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-const doctorSchema = new Schema<IDoctor>(
+const DoctorSchema = new Schema<IDoctor>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    specialization: { type: String, required: true },
-    experience: { type: Number, required: true },
-    fees: { type: Number, required: true },
-    availableDays: { type: [String], required: true },
+    fullName: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
   },
   { timestamps: true }
 );
 
-export const DoctorModel = model<IDoctor>("Doctor", doctorSchema);
+
+DoctorSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+
+DoctorSchema.methods.comparePassword = async function (candidatePassword: string) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+
+DoctorSchema.set("toJSON", {
+  transform: (_, ret: any) => {
+    ret.id = ret._id.toString();
+    delete ret._id;
+    delete ret.__v;
+    delete ret.password;
+    return ret;
+  },
+});
+
+export const DoctorModel = model<IDoctor>("Doctor", DoctorSchema);
