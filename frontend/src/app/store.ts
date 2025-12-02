@@ -3,6 +3,8 @@ import authReducer from "../features/auth/authSlice";
 import adminAuthReducer from "../admin/features/adminAuthSlice"; 
 import doctorAuthReducer from "../doctor/features/doctorAuthSlice";
 import patientReducer from "../admin/features/Patients/patientSlice";
+import doctorProfileReducer from "../doctor/features/doctorProfileSlice";
+
 
 
 
@@ -13,6 +15,8 @@ export const store = configureStore({
     adminAuth: adminAuthReducer,
     doctorAuth: doctorAuthReducer,
     patients: patientReducer,
+    doctorProfile: doctorProfileReducer,
+
     
   },
 });

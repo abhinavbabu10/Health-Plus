@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import { UserModel } from "../../infrastructure/models/UserModel";
-import { AppointmentModel } from "../../infrastructure/models/AppointmentModel"; // if you have appointments
+import { AppointmentModel } from "../../infrastructure/models/AppointmentModel";
 
 export class AdminDashboardController {
   async getSummary(req: Request, res: Response) {
     try {
       const doctors = await UserModel.countDocuments({ role: "doctor" });
       const patients = await UserModel.countDocuments({ role: "patient" });
-      const appointments = await AppointmentModel.countDocuments(); // optional
+      const appointments = await AppointmentModel.countDocuments(); 
 
       return res.status(200).json({
         doctors,

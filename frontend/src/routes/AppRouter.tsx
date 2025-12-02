@@ -13,15 +13,27 @@ import Appointments from "../admin/pages/Appointments";
 import Reports from "../admin/pages/Reports";
 import SettingsPage from "../admin/pages/Settings";
 import AdminProtectedRoute from "../admin/routes/ProtectedAdminRoute";
+
 import DoctorSignup from "../doctor/pages/DoctorSignup";
 import DoctorLogin from "../doctor/pages/DoctorLogin"; 
 import DoctorDashboard from "../doctor/components/DoctorDashboard";
+import DoctorProfilePage from "../doctor/pages/DoctorProfilePage";
 import DoctorProtectedRoute from "../doctor/components/ProtectedDoctorRoute";
 
 const AppRouter = () => {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<Home />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/login" element={<Login />} />
+
+      <Route path="/doctor/signup" element={<DoctorSignup />} />
+      <Route path="/doctor/login" element={<DoctorLogin />} />
+
+      <Route path="/admin/login" element={<AdminLogin />} />
+
+      {/* Protected Home */}
       <Route
         path="/home"
         element={
@@ -30,26 +42,26 @@ const AppRouter = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/login" element={<Login />} />
-   
-   <Route path="/doctor/signup" element={<DoctorSignup />} />
 
-   <Route path="/doctor/login" element={<DoctorLogin />} />
+      {/* Doctor Protected Routes */}
+      <Route
+        path="/doctor/dashboard"
+        element={
+          <DoctorProtectedRoute>
+            <DoctorDashboard />
+          </DoctorProtectedRoute>
+        }
+      />
+      <Route
+        path="/doctor/profile"
+        element={
+          <DoctorProtectedRoute>
+            <DoctorProfilePage />
+          </DoctorProtectedRoute>
+        }
+      />
 
-  <Route
-  path="/doctor/dashboard"
-  element={
-    <DoctorProtectedRoute>
-      <DoctorDashboard />
-    </DoctorProtectedRoute>
-  }
-/>
-
-
-
-      <Route path="/admin/login" element={<AdminLogin />} />
-
+      {/* Admin Protected Routes */}
       <Route
         path="/admin/dashboard"
         element={
@@ -99,6 +111,7 @@ const AppRouter = () => {
         }
       />
 
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

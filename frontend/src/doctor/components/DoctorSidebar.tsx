@@ -8,7 +8,7 @@ const DoctorSidebar: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const nav = [
+  const nav = [ 
     { name: "Dashboard", to: "/doctor/dashboard", icon: <Home size={18} /> },
     { name: "Appointments", to: "/doctor/appointments", icon: <Calendar size={18} /> },
     { name: "Patients", to: "/doctor/patients", icon: <Users size={18} /> },
