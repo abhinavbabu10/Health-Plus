@@ -22,8 +22,8 @@ export const fetchDoctorProfile = createAsyncThunk(
       const token = state.doctorAuth.doctorToken;
       if (!token) throw new Error("Unauthorized");
       return await fetchDoctorProfileApi(token);
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+    } catch (err: any) { 
+      return rejectWithValue(err.message); 
     }
   }
 );

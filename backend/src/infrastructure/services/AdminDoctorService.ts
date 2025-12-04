@@ -1,3 +1,4 @@
+// src/infrastructure/services/AdminDoctorService.ts
 import { DoctorRepository } from "../repositories/doctorRepository";
 
 export class AdminDoctorService {
@@ -7,8 +8,12 @@ export class AdminDoctorService {
     this.doctorRepo = doctorRepo;
   }
 
-  async getAllDoctors() {
-    return await this.doctorRepo.findAll();
+  async getAllDoctors(status?: "pending" | "verified" | "rejected") {
+    return await this.doctorRepo.findAll(status);
+  }
+
+  async getPendingDoctors() {
+    return await this.doctorRepo.findAll("pending");
   }
 
   async getDoctorById(id: string) {
@@ -21,6 +26,10 @@ export class AdminDoctorService {
     const doctor = await this.doctorRepo.findById(id);
     if (!doctor) throw new Error("Doctor not found");
 
+    if (doctor.isVerified()) {
+      throw new Error("Doctor is already verified");
+    }
+
     doctor.verify();
 
     return await this.doctorRepo.save(doctor);
@@ -30,8 +39,26 @@ export class AdminDoctorService {
     const doctor = await this.doctorRepo.findById(id);
     if (!doctor) throw new Error("Doctor not found");
 
+    if (doctor.isRejected()) {
+      throw new Error("Doctor is already rejected");
+    }
+
     doctor.reject(reason);
 
     return await this.doctorRepo.save(doctor);
+  }
+
+  async getStatistics() {
+    const all = await this.doctorRepo.findAll();
+    const pending = await this.doctorRepo.findAll("pending");
+    const verified = await this.doctorRepo.findAll("verified");
+    const rejected = await this.doctorRepo.findAll("rejected");
+
+    return {
+      total: all.length,
+      pending: pending.length,
+      verified: verified.length,
+      rejected: rejected.length
+    };
   }
 }

@@ -5,7 +5,7 @@ import { uploadBufferToCloudinary } from "../../utils/cloudinaryUpload";
 
 const service = new DoctorProfileService();
 
-export class DoctorProfileController {
+export class DoctorProfileController { 
 
   async createProfile(req: Request, res: Response, next: NextFunction) {
     try {
@@ -15,7 +15,7 @@ export class DoctorProfileController {
       const profileData: Partial<IDoctorProfile> = { ...req.body };
       const files = req.files as { [key: string]: Express.Multer.File[] } | undefined;
 
-      profileData.documents = profileData.documents || {};
+      profileData.documents = profileData.documents || {}; 
 
       const uploadIfPresent = async (field: string) => {
         const file = files?.[field]?.[0];

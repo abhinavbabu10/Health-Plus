@@ -6,5 +6,9 @@ export const getAdminDashboardSummary = async (token: string) => {
   const { data } = await axios.get(`${API_URL}/admin/dashboard/summary`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+
+  console.log("ADMIN SUMMARY API RAW:", data);
+
   return data;
 };
+

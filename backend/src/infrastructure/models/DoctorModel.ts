@@ -5,6 +5,8 @@ export interface IDoctor extends Document {
   fullName: string;
   email: string;
   password: string;
+  verificationStatus: "pending" | "verified" | "rejected";
+  rejectionReason?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -15,10 +17,17 @@ const DoctorSchema = new Schema<IDoctor>(
     fullName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+
+    verificationStatus: {
+      type: String,
+      enum: ["pending", "verified", "rejected"],
+      default: "pending",
+    },
+
+    rejectionReason: { type: String },
   },
   { timestamps: true }
 );
-
 
 DoctorSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
@@ -27,11 +36,9 @@ DoctorSchema.pre("save", async function (next) {
   next();
 });
 
-
 DoctorSchema.methods.comparePassword = async function (candidatePassword: string) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
-
 
 DoctorSchema.set("toJSON", {
   transform: (_, ret: any) => {

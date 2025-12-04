@@ -19,12 +19,12 @@ const ALLOWED_DOC_TYPES = ["application/pdf", ...ALLOWED_IMAGE_TYPES];
 
 type FileKey = "license" | "certificate" | "profilePhoto" | "govtId" | "experienceCert";
 
-const DoctorProfilePage: React.FC = () => {
+const DoctorProfilePage: React.FC = () => { 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { doctorToken } = useAppSelector(selectDoctorAuth);
 
-  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(true); 
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({

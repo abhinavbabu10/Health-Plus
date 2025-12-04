@@ -17,8 +17,8 @@ const DoctorNavbar: React.FC = () => {
   // -------- Fetch profile photo ----------
   useEffect(() => {
     const loadProfile = async () => {
-      if (!doctorToken) return;
-
+      if (!doctorToken) return; 
+ 
       try {
         const profile = await dispatch(fetchDoctorProfile()).unwrap();
         if (profile?.documents?.profilePhoto) {

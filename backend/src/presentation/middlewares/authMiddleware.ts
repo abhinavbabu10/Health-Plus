@@ -15,4 +15,5 @@ export const doctorAuthMiddleware = (req: Request, res: Response, next: NextFunc
   } catch (err) {
     return res.status(401).json({ message: "Unauthorized: Invalid token" });
   } 
-};
+}; 
+ 

@@ -8,6 +8,7 @@ import Login from "../pages/Login";
 import AdminLogin from "../admin/pages/AdminLogin";
 import AdminDashboard from "../admin/pages/AdminDashboard";
 import Doctors from "../admin/pages/Doctor/Doctors";
+import DoctorDetails from "../admin/pages/Doctor/DoctorDetails"; // Add this import
 import Patients from "../admin/pages/Patients/Patients";
 import Appointments from "../admin/pages/Appointments";
 import Reports from "../admin/pages/Reports";
@@ -75,6 +76,15 @@ const AppRouter = () => {
         element={
           <AdminProtectedRoute>
             <Doctors />
+          </AdminProtectedRoute>
+        }
+      />
+      {/* ADD THIS NEW ROUTE - Doctor Details */}
+      <Route
+        path="/admin/doctors/:id"
+        element={
+          <AdminProtectedRoute>
+            <DoctorDetails />
           </AdminProtectedRoute>
         }
       />

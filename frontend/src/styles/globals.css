@@ -23,7 +23,7 @@ body {
 }
 
 /* Background gradient */
-.doctor-profile-bg {
+.doctor-profile-bg { 
   background: linear-gradient(135deg, #e0f7ff, #f5f9ff 40%, #ffffff);
   min-height: 100vh;
   padding: 40px 0;

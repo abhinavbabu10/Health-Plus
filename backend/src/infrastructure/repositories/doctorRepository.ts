@@ -1,56 +1,72 @@
-import { DoctorModel, IDoctor } from "../models/DoctorModel";
-import { Doctor, DoctorProps } from "../../domain/doctor";
-import { Types } from "mongoose";
-
+import { DoctorModel } from "../models/DoctorModel";
+import { DoctorProfileModel } from "../models/DoctorProfileModel";
+import { Doctor } from "../../domain/doctor";
 
 export class DoctorRepository {
-  async create(fullName: string, email: string, password: string): Promise<Doctor> {
-    const doc = await DoctorModel.create({ fullName, email, password });
-    return this.toDomain(doc);
-  }
+  
+  async findAll(status?: "pending" | "verified" | "rejected") {
+    const filter = status ? { verificationStatus: status } : {};
+    const doctors = await DoctorModel.find(filter).sort({ createdAt: -1 });
 
-  async findByEmail(email: string): Promise<Doctor | null> {
-    const doc = await DoctorModel.findOne({ email });
-    if (!doc) return null;
-    return this.toDomain(doc);
-  }
-
-  async findById(id: string): Promise<Doctor | null> {
-    const doc = await DoctorModel.findById(id);
-    if (!doc) return null;
-    return this.toDomain(doc);
-  }
-
-  async findAll(): Promise<Doctor[]> {
-    const docs = await DoctorModel.find();
-    return docs.map((d) => this.toDomain(d));
-  }
-
-  async save(doctor: Doctor): Promise<Doctor> {
-    const updated = await DoctorModel.findByIdAndUpdate(
-      doctor.id,
-      { ...doctor },
-      { new: true }
+    const doctorsWithProfiles = await Promise.all(
+      doctors.map(async (doc) => {
+        const profile = await DoctorProfileModel.findOne({ doctorId: doc._id });
+        return {
+          ...doc.toJSON(),
+          profile: profile ? profile.toJSON() : null
+        };
+      })
     );
-    if (!updated) throw new Error("Doctor not found");
-    return this.toDomain(updated);
+    
+    return doctorsWithProfiles;
   }
 
-    async updateFromDomain(doctor: IDoctor): Promise<IDoctor> {
-    return await doctor.save();
+  async findById(id: string) {
+    const doctorDoc = await DoctorModel.findById(id);
+    if (!doctorDoc) return null;
+
+    const profile = await DoctorProfileModel.findOne({ doctorId: id });
+
+    return this.toDomain(doctorDoc, profile);
   }
 
+  async save(doctor: Doctor) {
+    const doctorDoc = await DoctorModel.findById(doctor.id);
+    if (!doctorDoc) throw new Error("Doctor not found");
 
-  private toDomain(doc: IDoctor) {
-  const props: DoctorProps = {
-    _id: (doc._id as Types.ObjectId).toString(),
-    fullName: doc.fullName,
-    email: doc.email,
-    password: doc.password,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt,
-  };
+    doctorDoc.verificationStatus = doctor.verificationStatus;
+    doctorDoc.rejectionReason = doctor.rejectionReason;
+    
+    await doctorDoc.save();
 
-  return new Doctor(props);
-}
+
+    const profile = await DoctorProfileModel.findOne({ doctorId: doctor.id });
+    if (profile) {
+      profile.verificationStatus = doctor.verificationStatus;
+      profile.rejectionReason = doctor.rejectionReason;
+      await profile.save();
+    }
+
+    return {
+      ...doctorDoc.toJSON(),
+      profile: profile ? profile.toJSON() : null
+    };
+  }
+
+  private toDomain(doctorDoc: any, profile: any): Doctor {
+    const doctor = new Doctor(
+      doctorDoc._id.toString(),
+      doctorDoc.fullName,
+      doctorDoc.email,
+      doctorDoc.verificationStatus,
+      doctorDoc.rejectionReason,
+      doctorDoc.createdAt,
+      doctorDoc.updatedAt
+    );
+
+   
+    (doctor as any).profile = profile ? profile.toJSON() : null;
+
+    return doctor;
+  }
 }
